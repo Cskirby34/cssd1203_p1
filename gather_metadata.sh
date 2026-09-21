@@ -41,7 +41,7 @@ do
 
     identify -verbose "$image" > "$image_dir/.metadata/$filename.txt"
 
-    dimensions=$(identify -format '%w %h' "$image")
+    dimensions=$(identify -format '%w %h\n' "${image}[0]" 2>/dev/null </dev/null | head -n 1)
     read -r width height <<< "$dimensions"
 
     if [ "$width" -gt 512 ] || [ "$height" -gt 512 ]; then
