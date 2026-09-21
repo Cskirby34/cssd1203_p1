@@ -1,7 +1,7 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 
 if [ "$#" -gt 1 ]; then
-  exit 1
+    exit 1
 fi
 
 if [ "$#" -eq 0 ]; then
@@ -20,7 +20,12 @@ if [ ! -r "$dir" ] || [ ! -x "$dir" ]; then
     exit 1
 fi
 
-find "$dir" -type f \
+find_dir="$dir"
+case "$find_dir" in
+    -*) find_dir="./$find_dir" ;;
+esac
+
+find "$find_dir" -type f \
     \( -iname '*.jpg' -o \
        -iname '*.jpeg' -o \
        -iname '*.png' -o \
@@ -28,7 +33,7 @@ find "$dir" -type f \
        -iname '*.tiff' -o \
        -iname '*.bmp' -o \
        -iname '*.gif' \) \
-    ! -path '*/.thumbs/*' |
+    ! -path '*/.thumbs/*' 2>/dev/null |
 while IFS= read -r image
 do
 
@@ -36,14 +41,16 @@ do
 
     filename=$(basename "$image")
 
+    dimensions=$(identify -format '%w %h\n' "${image}[0]" 2>/dev/null </dev/null | head -n 1)
+    read -r width height <<< "$dimensions"
+
+    case "$width" in ''|*[!0-9]*) continue ;; esac
+    case "$height" in ''|*[!0-9]*) continue ;; esac
+
     mkdir -p "$image_dir/.thumbs"
     mkdir -p "$image_dir/.metadata"
 
-    identify -verbose "$image" > "$image_dir/.metadata/$filename.txt"
-
-    dimensions=$(identify -format '%w %h\n' "${image}[0]" 2>/dev/null </dev/null | head -n 1)
-    read -r width height <<< "$dimensions"
-    case "$width" in ''|*[!0-9]*) continue ;; esac
+    identify -verbose "$image" > "$image_dir/.metadata/$filename.txt" 2>/dev/null </dev/null
 
     if [ "$width" -gt 512 ] || [ "$height" -gt 512 ]; then
         max_size=512
@@ -60,17 +67,17 @@ do
 
     if [ "$max_size" -ge 128 ]; then
         convert "$image" -resize "128x128>" \
-            "$image_dir/.thumbs/${base}-128.${extension}"
+            "$image_dir/.thumbs/${base}-128.${extension}" 2>/dev/null </dev/null
     fi
 
     if [ "$max_size" -ge 256 ]; then
         convert "$image" -resize "256x256>" \
-            "$image_dir/.thumbs/${base}-256.${extension}"
+            "$image_dir/.thumbs/${base}-256.${extension}" 2>/dev/null </dev/null
     fi
 
     if [ "$max_size" -ge 512 ]; then
         convert "$image" -resize "512x512>" \
-            "$image_dir/.thumbs/${base}-512.${extension}"
+            "$image_dir/.thumbs/${base}-512.${extension}" 2>/dev/null </dev/null
     fi
 
     printf '%s\n' "$image"
