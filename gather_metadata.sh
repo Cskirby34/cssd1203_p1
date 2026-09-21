@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-if ["$#" -gt 1]; then
+if ["$#" -gt 1 ]; then
   exit 1
 fi
 
