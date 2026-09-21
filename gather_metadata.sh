@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-if ["$#" -gt 1 ]; then
+if [ "$#" -gt 1 ]; then
   exit 1
 fi
 
@@ -43,6 +43,7 @@ do
 
     dimensions=$(identify -format '%w %h\n' "${image}[0]" 2>/dev/null </dev/null | head -n 1)
     read -r width height <<< "$dimensions"
+    case "$width" in ''|*[!0-9]*) continue ;; esac
 
     if [ "$width" -gt 512 ] || [ "$height" -gt 512 ]; then
         max_size=512
